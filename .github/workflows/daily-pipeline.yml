@@ -1,0 +1,59 @@
+name: Daily Hindi News Pipeline
+
+on:
+  schedule:
+    # 03:00 UTC = 08:30 IST. Adjust to whenever you want the day's videos posted.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      skip_upload:
+        description: "Build videos but skip the YouTube upload (dry run)"
+        type: boolean
+        default: false
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Write credentials from secrets
+        # client_secret.json isn't actually needed at runtime (only for the one-time
+        # local auth), but token.json is what lets this run unattended.
+        run: |
+          echo "${{ secrets.YOUTUBE_TOKEN_JSON }}" > token.json
+
+      - name: Run pipeline
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          if [ "${{ github.event.inputs.skip_upload }}" = "true" ]; then
+            python run_pipeline.py --skip-upload
+          else
+            python run_pipeline.py
+          fi
+
+      - name: Upload logs + manifests as build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-run-${{ github.run_id }}
+          path: |
+            data/logs/
+            data/*.json
+          retention-days: 14

@@ -1,0 +1,40 @@
+name: YouTube Auth Setup (one-time, manual)
+
+# Run this manually from the Actions tab (works from the GitHub mobile app or
+# mobile browser — no desktop needed). Watch the log: it prints a URL + code,
+# open the URL on your phone and type the code. Once it succeeds, copy the
+# printed token.json contents into a YOUTUBE_TOKEN_JSON repo secret, then this
+# workflow has done its job — the daily pipeline workflow uses that secret.
+
+on:
+  workflow_dispatch: {}
+
+jobs:
+  device-auth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5  # you have 5 minutes to open the link and type the code
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal dependencies
+        run: pip install requests
+
+      - name: Write client_secret.json from secret
+        run: echo '${{ secrets.YOUTUBE_CLIENT_SECRET_JSON }}' > client_secret.json
+
+      - name: Run device-flow auth (watch this step's log for the URL + code)
+        run: python youtube_auth_setup.py
+
+      - name: Print token.json (copy this into the YOUTUBE_TOKEN_JSON secret)
+        run: |
+          echo "===== COPY EVERYTHING BETWEEN THE MARKERS BELOW INTO YOUTUBE_TOKEN_JSON ====="
+          cat token.json
+          echo ""
+          echo "===== END — do NOT commit this file, it grants upload access ====="

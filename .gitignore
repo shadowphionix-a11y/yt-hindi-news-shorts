@@ -1,0 +1,18 @@
+# Secrets — never commit these
+client_secret.json
+token.json
+.env
+
+# Generated data (regenerated fresh each run; GitHub Actions uploads it as a
+# build artifact instead, see .github/workflows/daily-pipeline.yml)
+data/
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Keep these tracked even though they live under folders that could look generated:
+!assets/fonts/*.ttf
+!assets/music/*.mp3
