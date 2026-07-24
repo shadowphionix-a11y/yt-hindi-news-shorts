@@ -92,8 +92,7 @@ def main():
     verification_url = device_resp["verification_url"]
     user_code = device_resp["user_code"]
     interval = device_resp.get("interval", 5)
-
-    print("\n" + "=" * 50, flush=True)
+   print("\n" + "=" * 50, flush=True)
     print(f"  1. On your phone, open: {verification_url}", flush=True)
     print(f"  2. Enter this code:     {user_code}", flush=True)
     print("  3. Log in and approve access for your YouTube channel.", flush=True)
