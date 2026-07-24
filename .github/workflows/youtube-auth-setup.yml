@@ -1,18 +1,12 @@
 name: YouTube Auth Setup (one-time, manual)
 
-# Run this manually from the Actions tab (works from the GitHub mobile app or
-# mobile browser — no desktop needed). Watch the log: it prints a URL + code,
-# open the URL on your phone and type the code. Once it succeeds, copy the
-# printed token.json contents into a YOUTUBE_TOKEN_JSON repo secret, then this
-# workflow has done its job — the daily pipeline workflow uses that secret.
-
 on:
   workflow_dispatch: {}
 
 jobs:
   device-auth:
     runs-on: ubuntu-latest
-    timeout-minutes: 5  # you have 5 minutes to open the link and type the code
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repo
@@ -24,17 +18,30 @@ jobs:
           python-version: "3.11"
 
       - name: Install minimal dependencies
-        run: pip install requests
+        run: |
+          pip install --upgrade pip
+          pip install requests
 
       - name: Write client_secret.json from secret
-        run: echo '${{ secrets.YOUTUBE_CLIENT_SECRET_JSON }}' > client_secret.json
+        run: |
+          echo '${{ secrets.YOUTUBE_CLIENT_SECRET_JSON }}' > client_secret.json
+
+      - name: Verify client_secret.json
+        run: |
+          echo "========== CLIENT SECRET =========="
+          ls -l client_secret.json
+          python -c "import json; d=json.load(open('client_secret.json')); print(d)"
+          echo "==================================="
 
       - name: Run device-flow auth (watch this step's log for the URL + code)
-        run: python youtube_auth_setup.py
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python -u youtube_auth_setup.py
 
       - name: Print token.json (copy this into the YOUTUBE_TOKEN_JSON secret)
         run: |
-          echo "===== COPY EVERYTHING BETWEEN THE MARKERS BELOW INTO YOUTUBE_TOKEN_JSON ====="
+          echo "========== TOKEN.JSON =========="
           cat token.json
           echo ""
-          echo "===== END — do NOT commit this file, it grants upload access ====="
+          echo "================================"
