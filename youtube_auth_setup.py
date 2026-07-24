@@ -98,7 +98,15 @@ def main():
     print(f"  2. Enter this code:     {user_code}", flush=True)
     print("  3. Log in and approve access for your YouTube channel.", flush=True)
     print("=" * 50 + "\n", flush=True)
-    print("Waiting for approval...", flush=True)
+    # Save device code so GitHub Actions can upload it as an artifact
+    with open("device_code.txt", "w", encoding="utf-8") as f:
+    f.write("YOUTUBE DEVICE AUTH\n")
+    f.write("===================\n\n")
+    f.write(f"Open this URL:\n{verification_url}\n\n")
+    f.write(f"Enter this code:\n{user_code}\n\n")
+    f.write("After approving access, return to GitHub Actions.\n")
+
+print("Saved device code to device_code.txt", flush=True)
 
     token_resp = poll_for_token(client_id, client_secret, device_resp["device_code"], interval)
 
