@@ -86,18 +86,19 @@ def poll_for_token(client_id: str, client_secret: str, device_code: str, interva
 
 def main():
     client_id, client_secret = _load_client_creds()
-
+    print("Requesting device code...", flush=True)
     device_resp = request_device_code(client_id)
+    print("Device code received.", flush=True)
     verification_url = device_resp["verification_url"]
     user_code = device_resp["user_code"]
     interval = device_resp.get("interval", 5)
 
-    print("\n" + "=" * 50)
-    print(f"  1. On your phone, open: {verification_url}")
-    print(f"  2. Enter this code:     {user_code}")
-    print("  3. Log in and approve access for your YouTube channel.")
-    print("=" * 50 + "\n")
-    print("Waiting for approval...")
+    print("\n" + "=" * 50, flush=True)
+    print(f"  1. On your phone, open: {verification_url}", flush=True)
+    print(f"  2. Enter this code:     {user_code}", flush=True)
+    print("  3. Log in and approve access for your YouTube channel.", flush=True)
+    print("=" * 50 + "\n", flush=True)
+    print("Waiting for approval...", flush=True)
 
     token_resp = poll_for_token(client_id, client_secret, device_resp["device_code"], interval)
 
