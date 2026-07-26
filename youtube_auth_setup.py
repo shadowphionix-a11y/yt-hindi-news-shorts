@@ -82,13 +82,13 @@ def poll_for_token(client_id: str, client_secret: str, device_code: str, interva
             continue
         else:
             raise RuntimeError(f"OAuth device flow failed: {payload}")
+
+
 def main():
     client_id, client_secret = _load_client_creds()
-
     print("Requesting device code...", flush=True)
     device_resp = request_device_code(client_id)
     print("Device code received.", flush=True)
-
     verification_url = device_resp["verification_url"]
     user_code = device_resp["user_code"]
     interval = device_resp.get("interval", 5)
@@ -98,24 +98,12 @@ def main():
     print(f"  2. Enter this code:     {user_code}", flush=True)
     print("  3. Log in and approve access for your YouTube channel.", flush=True)
     print("=" * 50 + "\n", flush=True)
-
-    with open("device_code.txt", "w", encoding="utf-8") as f:
-        f.write("YOUTUBE DEVICE AUTH\n")
-        f.write("===================\n\n")
-        f.write(f"Open this URL:\n{verification_url}\n\n")
-        f.write(f"Enter this code:\n{user_code}\n\n")
-        f.write("After approving access, return to GitHub Actions.\n")
-
-    print("Saved device code to device_code.txt", flush=True)
     print("Waiting for approval...", flush=True)
 
-    token_resp = poll_for_token(
-        client_id,
-        client_secret,
-        device_resp["device_code"],
-        interval,
-    )
+    token_resp = poll_for_token(client_id, client_secret, device_resp["device_code"], interval)
 
+    # Save in the same authorized-user format google-auth's Credentials.from_authorized_user_file
+    # expects, so upload_youtube.py can load it without any changes.
     token_data = {
         "token": token_resp["access_token"],
         "refresh_token": token_resp["refresh_token"],
@@ -124,14 +112,13 @@ def main():
         "client_secret": client_secret,
         "scopes": YOUTUBE_UPLOAD_SCOPES,
     }
-
-    YOUTUBE_TOKEN_FILE.write_text(
-        json.dumps(token_data),
-        encoding="utf-8",
-    )
+    YOUTUBE_TOKEN_FILE.write_text(json.dumps(token_data), encoding="utf-8")
 
     print(f"[done] saved reusable token to {YOUTUBE_TOKEN_FILE}")
-    print("For GitHub Actions: copy this file's contents into the YOUTUBE_TOKEN_JSON repo secret.")
-    print("Keep it private — it grants upload access to your channel.")
-  if __name__ == "__main__":
+    print("       For GitHub Actions: copy this file's contents into the YOUTUBE_TOKEN_JSON")
+    print("       repo secret. Keep it private — it grants upload access to your channel.")
+
+
+if __name__ == "__main__":
     main()
+  
